@@ -14,8 +14,9 @@ interface AppInfo {
   startedAt: string;
 }
 
-const API_URL = "http://localhost:4000/api/todos";
-const INFO_URL = "http://localhost:4000/api/info";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_URL = `${API_BASE}/api/todos`;
+const INFO_URL = `${API_BASE}/api/info`;
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
