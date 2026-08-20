@@ -7,12 +7,21 @@ interface Todo {
   completed: boolean;
 }
 
+interface AppInfo {
+  runNumber: number;
+  instanceId: string;
+  hostname: string;
+  startedAt: string;
+}
+
 const API_URL = "http://localhost:4000/api/todos";
+const INFO_URL = "http://localhost:4000/api/info";
 
 function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTitle, setNewTitle] = useState("");
   const [loading, setLoading] = useState(true);
+  const [info, setInfo] = useState<AppInfo | null>(null);
 
   async function loadTodos() {
     setLoading(true);
@@ -24,6 +33,10 @@ function App() {
 
   useEffect(() => {
     loadTodos();
+    fetch(INFO_URL)
+      .then((res) => res.json())
+      .then(setInfo)
+      .catch(() => {});
   }, []);
 
   async function handleAdd(e: React.FormEvent) {
@@ -73,8 +86,28 @@ function App() {
           borderRadius: 24,
           padding: "48px 44px",
           boxShadow: "0 20px 50px rgba(219, 39, 119, 0.12)",
+          position: "relative",
         }}
       >
+        {info && (
+          <div
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              background: "#fce7f3",
+              color: "#be185d",
+              padding: "6px 12px",
+              borderRadius: 20,
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+            title={`Instancia: ${info.instanceId} — Host: ${info.hostname}`}
+          >
+            Run #{info.runNumber} · {info.instanceId.slice(0, 8)}
+          </div>
+        )}
+
         <div style={{ textAlign: "center", marginBottom: 56, width: "100%" }}>
           <div style={{ fontSize: 40, marginBottom: 8 }}>🌸</div>
           <h1

@@ -3,6 +3,9 @@ services:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--save", "60", "1"]
 
   backend:
     build: ./backend
@@ -20,3 +23,6 @@ services:
       - "5173:5173"
     depends_on:
       - backend
+
+volumes:
+  redis-data:

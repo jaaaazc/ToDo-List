@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { createClient } from "redis";
 import { randomUUID } from "crypto";
+import os from "os";
 
 const app = express();
 app.use(cors());
@@ -14,6 +15,15 @@ const TODOS_KEY = "todos";
 const redisClient = createClient({ url: REDIS_URL });
 redisClient.on("error", (err) => console.error("Redis error:", err));
 
+// Identificadores únicos de esta ejecución del contenedor
+let runNumber = 0;
+const instanceId = randomUUID();
+const startedAt = new Date().toISOString();
+
+async function registerRun() {
+  runNumber = await redisClient.incr("app:run_counter");
+}
+
 async function getTodos() {
   const data = await redisClient.get(TODOS_KEY);
   return data ? JSON.parse(data) : [];
@@ -22,6 +32,15 @@ async function getTodos() {
 async function saveTodos(todos: any[]) {
   await redisClient.set(TODOS_KEY, JSON.stringify(todos));
 }
+
+app.get("/api/info", (req, res) => {
+  res.json({
+    runNumber,
+    instanceId,
+    hostname: os.hostname(),
+    startedAt,
+  });
+});
 
 app.get("/api/todos", async (req, res) => {
   const todos = await getTodos();
@@ -64,8 +83,11 @@ app.delete("/api/todos/:id", async (req, res) => {
 
 async function start() {
   await redisClient.connect();
+  await registerRun();
   app.listen(PORT, () => {
-    console.log(`Backend corriendo en puerto ${PORT}`);
+    console.log(
+      `Backend corriendo en puerto ${PORT} — Run #${runNumber} — Instance ${instanceId}`
+    );
   });
 }
 
